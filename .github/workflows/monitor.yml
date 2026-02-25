@@ -1,0 +1,33 @@
+name: EPO Decisions Monitor
+
+on:
+  schedule:
+    - cron: '0 8 * * *'  # 每天北京时间下午 4 点运行 (UTC 8:00)
+  workflow_dispatch:      # 允许手动点击按钮立即运行
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.10'
+
+      - name: Install dependencies
+        run: |
+          pip install requests beautifulsoup4
+
+      - name: Run scraper
+        run: python scraper.py
+
+      - name: Commit changes
+        run: |
+          git config --local user.email "action@github.com"
+          git config --local user.name "GitHub Action"
+          git add seen_decisions.json
+          git commit -m "Update seen decisions [skip ci]" || exit 0
+          git push
